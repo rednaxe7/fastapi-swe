@@ -7,7 +7,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "fastapi-swe-v0.1.8"}
+    return {"message": "fastapi-swe-v0.1.9"}
 
 @app.get("/health/db")
 def health_check_db():
