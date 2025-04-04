@@ -2,3 +2,5 @@ fastapi
 uvicorn
 sqlalchemy
 pymysql  # Para la conexión a MySQL (si usas Railway)
+pytest
+httpx

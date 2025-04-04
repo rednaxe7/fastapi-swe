@@ -4,11 +4,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "Hola Mundo"}
-
-
-
-
+    return {"message": "fastapi-swe-v0.0.3"}
 
 
 
