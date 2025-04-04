@@ -1,0 +1,5 @@
+HOST=containers-us-west-XX.railway.app
+PORT=XXXX
+DATABASE=railway
+USER=root
+PASSWORD=supersecret
