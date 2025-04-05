@@ -1,37 +1,37 @@
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.db.database import Base, get_db
-from fastapi.testclient import TestClient
+
 from src.main import app
+from src.db.database import Base, get_db
+from src.db import models  # 👈 Importante para registrar los modelos
 
-# Configuración de la base de datos en memoria para pruebas
-#SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Base de datos de pruebas (en archivo local, también puedes usar ":memory:" si querés)
+TEST_DATABASE_URL = "sqlite:///./test.db"
 
-# Crea un engine y una sesión para la base de datos
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Crear engine y sesión para test
+engine = create_engine(
+    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
-# Creamos la base de datos en memoria antes de ejecutar las pruebas
-@pytest.fixture(scope="session")
-def create_test_db():
-    # Crear las tablas de la base de datos
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)  # Limpiar la base de datos después de las pruebas
+# Crear las tablas al iniciar
+Base.metadata.create_all(bind=engine)
 
-# Fixture para crear una sesión de prueba
-@pytest.fixture()
-def db(create_test_db):
+# Dependency override para FastAPI
+def override_get_db():
     db = TestingSessionLocal()
-    yield db
-    db.close()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# Fixture para el cliente de pruebas de FastAPI
-@pytest.fixture()
-def client(db):
-    # Inyectamos el cliente de prueba con la base de datos en memoria
-    app.dependency_overrides[get_db] = lambda: db
-    with TestClient(app) as client:
-        yield client
+# Reemplazar la dependencia en la app
+app.dependency_overrides[get_db] = override_get_db
+
+# Cliente de pruebas
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app) as c:
+        yield c

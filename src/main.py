@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.api import user_routes
-from src.db import models  
+#from src.db import models  
 from src.db.database import Base, engine
 
 # Middleware para registrar las solicitudes

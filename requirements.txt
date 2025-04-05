@@ -5,4 +5,5 @@ pymysql  # Para la conexión a MySQL (si usas Railway)
 cryptography
 email-validator
 pytest
+pytest-mock
 httpx
