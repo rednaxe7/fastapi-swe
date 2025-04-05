@@ -7,7 +7,7 @@ from src.main import app
 from src.db.database import Base, get_db
 from src.db import models  # 👈 Importante para registrar los modelos
 
-# Base de datos de pruebas (en archivo local, también puedes usar ":memory:" si querés)
+# Base de datos de pruebas (en archivo local, también puedes usar ":memory:" si quieres)
 TEST_DATABASE_URL = "sqlite:///./test.db"
 
 # Crear engine y sesión para test
@@ -35,3 +35,12 @@ app.dependency_overrides[get_db] = override_get_db
 def client():
     with TestClient(app) as c:
         yield c
+
+# Fixture para acceder a la base de datos directamente
+@pytest.fixture(scope="function")
+def db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

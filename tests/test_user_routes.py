@@ -1,6 +1,7 @@
 import pytest
-from src.schemas.user import UserCreate, UserResponse
-from sqlalchemy.exc import IntegrityError
+#from src.schemas.user import UserCreate, UserResponse
+from src.db.models import User  
+#from sqlalchemy.exc import IntegrityError
 
 # Prueba para crear un usuario exitosamente
 def test_create_user_success(client):
@@ -133,3 +134,71 @@ def test_delete_user_not_found(client):
     response = client.delete("/users/9999")  # Asumimos que no existe
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
+
+# 🧪 Test: Obtener un usuario existente
+def test_get_user_success(client):
+    # Primero creamos un usuario
+    user_data = {
+        "username": "get_user_test",
+        "email": "getuser@example.com",
+        "first_name": "Get",
+        "last_name": "User",
+        "role": "guest",
+        "active": True
+    }
+
+    # Crear usuario
+    response = client.post("/users/", json=user_data)
+    assert response.status_code == 200
+    created_user = response.json()
+    user_id = created_user["id"]
+
+    # Obtener usuario por ID
+    get_response = client.get(f"/users/{user_id}")
+    assert get_response.status_code == 200
+    user = get_response.json()
+    assert user["id"] == user_id
+    assert user["username"] == user_data["username"]
+    assert user["email"] == user_data["email"]
+
+# 🧪 Test: Obtener un usuario que no existe
+def test_get_user_not_found(client):
+    response = client.get("/users/9999")  # Suponiendo que este ID no existe
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
+
+
+# 🧪 Test: Obtener todos los usuarios cuando hay usuarios
+def test_get_users_success(client):
+    # Crear usuario de prueba
+    user_data = {
+        "username": "list_user",
+        "email": "listuser@example.com",
+        "first_name": "List",
+        "last_name": "User",
+        "role": "guest",
+        "active": True
+    }
+    response = client.post("/users/", json=user_data)
+    assert response.status_code == 200
+
+    # Obtener lista de usuarios
+    get_response = client.get("/users/")
+    assert get_response.status_code == 200
+    users = get_response.json()
+    assert isinstance(users, list)
+    assert any(u["email"] == "listuser@example.com" for u in users)
+
+# 🧪 Test: Obtener todos los usuarios cuando no hay ninguno
+def test_get_users_not_found(client, db):
+    # Limpiar la tabla de usuarios antes de la prueba
+    db.query(User).delete()
+    db.commit()
+
+    # Realizamos la solicitud GET
+    response = client.get("/users/")
+    
+    # Verificamos que la respuesta sea 404 si no hay usuarios
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No users found"}
+

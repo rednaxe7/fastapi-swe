@@ -6,4 +6,5 @@ cryptography
 email-validator
 pytest
 pytest-mock
+pytest-cov
 httpx
