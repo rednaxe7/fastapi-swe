@@ -2,12 +2,12 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal
 
 class UserBase(BaseModel):
-    username: Optional[str]
-    email: Optional[EmailStr]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    role: Optional[Literal['admin', 'user', 'guest']]
-    active: Optional[bool]
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[Literal['admin', 'user', 'guest']] = None
+    active: Optional[bool] = None
 
 class UserCreate(UserBase):
     username: str

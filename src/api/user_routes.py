@@ -27,6 +27,15 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     logger.info(f"User with ID: {user_id} updated successfully")
     return updated_user
 
+@router.delete("/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    logger.info(f"Delete user with ID: {user_id}")
+    success = user_service.delete_user_service(db, user_id)
+    if not success:
+        logger.warning(f"User with ID: {user_id} not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User successfully deleted"}
+
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     logger.info(f"Fetching user with ID: {user_id}")
@@ -36,3 +45,13 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"User with ID: {user_id} found")
     return user
+
+@router.get("/", response_model=list[UserResponse])
+def get_users(db: Session = Depends(get_db)):
+    logger.info("Fetching all users")
+    users = user_service.get_users_service(db)
+    if not users:
+        logger.warning("No users found")
+        raise HTTPException(status_code=404, detail="No users found")
+    logger.info(f"{len(users)} users found")
+    return users
