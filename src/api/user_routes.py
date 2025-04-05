@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from src.db.database import get_db
 from src.schemas.user import UserCreate, UserUpdate, UserResponse
@@ -24,19 +24,17 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="Username or email already exists")
 
-    except SQLAlchemyError as e:
-        logger.error(f"Database error: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-    except Exception as e:
-        logger.exception("Unexpected error during user creation")
-        raise HTTPException(status_code=500, detail="Unexpected error")
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     try:
         logger.info(f"Updating user with ID: {user_id}")
+
+        # Validación para no modificar el `username`
+        if user.username:
+            logger.warning(f"Attempt to modify username for user with ID: {user_id}")
+            raise HTTPException(status_code=400, detail="Username cannot be modified")
+
         updated_user = user_service.update_user_service(db, user_id, user)
         
         if not updated_user:
@@ -51,61 +49,35 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
         logger.warning(f"Conflict updating user {user_id} - likely duplicate email or username")
         raise HTTPException(status_code=400, detail="Username or email already exists")
 
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Database error during user update: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database error")
-
-    except Exception as e:
-        logger.exception(f"Unexpected error updating user {user_id}")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred")
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    try:
-        logger.info(f"Deleting user with ID: {user_id}")
-        success = user_service.delete_user_service(db, user_id)
+    logger.info(f"Deleting user with ID: {user_id}")
+    success = user_service.delete_user_service(db, user_id)
 
-        if not success:
-            logger.warning(f"User with ID: {user_id} not found")
-            raise HTTPException(status_code=404, detail="User not found")
+    if not success:
+        logger.warning(f"User with ID: {user_id} not found")
+        raise HTTPException(status_code=404, detail="User not found")
 
-        logger.info(f"User with ID: {user_id} deleted successfully")
-        return {"message": "User successfully deleted"}
+    logger.info(f"User with ID: {user_id} deleted successfully")
+    return {"message": "User successfully deleted"}
 
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Database error deleting user {user_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database error during deletion")
 
-    except Exception as e:
-        logger.exception(f"Unexpected error deleting user {user_id}")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred")
-    
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    try:
-        logger.info(f"Fetching user with ID: {user_id}")
-        user = user_service.get_user_service(db, user_id)
+    logger.info(f"Fetching user with ID: {user_id}")
+    user = user_service.get_user_service(db, user_id)
 
-        if not user:
-            logger.warning(f"User with ID: {user_id} not found")
-            raise HTTPException(status_code=404, detail="User not found")
+    if not user:
+        logger.warning(f"User with ID: {user_id} not found")
+        raise HTTPException(status_code=404, detail="User not found")
 
-        logger.info(f"User with ID: {user_id} found")
-        return user
+    logger.info(f"User with ID: {user_id} found")
+    return user
 
-    except SQLAlchemyError as e:
-        logger.error(f"Database error while fetching user {user_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database error")
-
-    except Exception as e:
-        logger.exception(f"Unexpected error while fetching user {user_id}")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred")
 
 @router.get("/", response_model=list[UserResponse])
 def get_users(db: Session = Depends(get_db)):
-    try:
         logger.info("Fetching all users")
         users = user_service.get_users_service(db)
 
@@ -116,10 +88,4 @@ def get_users(db: Session = Depends(get_db)):
         logger.info(f"{len(users)} users found")
         return users
 
-    except SQLAlchemyError as e:
-        logger.error(f"Database error while fetching users: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database error")
 
-    except Exception as e:
-        logger.exception("Unexpected error while fetching users")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred")
