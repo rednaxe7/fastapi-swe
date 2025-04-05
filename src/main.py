@@ -1,6 +1,7 @@
 import logging
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from src.api import user_routes
 from src.db.database import Base, engine
 
@@ -26,6 +27,18 @@ app.add_middleware(LogRequestsMiddleware)
 @app.get("/")
 def read_root():
     logger.info("Root endpoint hit")
-    return {"message": "fastapi-swe-v0.3.0"}
+    return {"message": "fastapi-swe-v0.3.5"}
 
 app.include_router(user_routes.router)
+
+# Manejo global de errores 500
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"Unhandled error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "codigo": "99",
+            "error": "Sorry, an unexpected error has occurred. Please try again later."
+        },
+    )
