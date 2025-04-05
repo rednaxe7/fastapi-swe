@@ -46,8 +46,8 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
 
     except IntegrityError:
         db.rollback()
-        logger.warning(f"Conflict updating user {user_id} - likely duplicate email or username")
-        raise HTTPException(status_code=400, detail="Username or email already exists")
+        logger.warning(f"Conflict updating user {user_id} - likely duplicate email")
+        raise HTTPException(status_code=400, detail="email already exists")
 
 
 @router.delete("/{user_id}")

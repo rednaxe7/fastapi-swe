@@ -105,6 +105,38 @@ def test_update_nonexistent_user(client):
     assert update_response.status_code == 404
     assert update_response.json()["detail"] == "User not found"
 
+
+def test_update_user_duplicate_email(client):
+    # Primero, creamos un usuario
+    user_data_1 = {
+        "username": "testing_user",
+        "email": "testinguser@example.com",
+        "first_name": "test",
+        "last_name": "t1",
+        "role": "guest",
+        "active": True
+    }
+    user_data_2 = {
+        "username": "testing_user2",
+        "email": "testinguser2@example.com",
+        "first_name": "test",
+        "last_name": "t2",
+        "role": "guest",
+        "active": True
+    }
+    create_response = client.post("/users/", json=user_data_1)
+    client.post("/users/", json=user_data_2)
+
+    assert create_response.status_code == 200
+    user_id = create_response.json()["id"]
+
+    update_data = {
+        "email": "testinguser2@example.com"
+    }
+    update_response = client.put(f"/users/{user_id}", json=update_data)
+    assert update_response.status_code == 400
+    assert update_response.json()["detail"] == "email already exists"
+
 # 🧪 Test: Eliminar un usuario existente
 def test_delete_user_success(client):
     # Creamos un usuario primero
