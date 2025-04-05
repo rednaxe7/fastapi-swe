@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Crear Usuario
 def create_user(db: Session, user_data: UserCreate) -> User:
-    new_user = User(**user_data.dict())
+    new_user = User(**user_data.model_dump())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -16,9 +16,9 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return None
-    for key, value in user_data.dict(exclude_unset=True).items():
+    for key, value in user_data.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
-    user.updated_at = datetime.utcnow()
+    user.updated_at = datetime.now()
     db.commit()
     db.refresh(user)
     return user

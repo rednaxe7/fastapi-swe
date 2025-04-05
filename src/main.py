@@ -3,6 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.api import user_routes
+from src.db import models  
 from src.db.database import Base, engine
 
 # Middleware para registrar las solicitudes
@@ -27,13 +28,14 @@ app.add_middleware(LogRequestsMiddleware)
 @app.get("/")
 def read_root():
     logger.info("Root endpoint hit")
-    return {"message": "fastapi-swe-v0.3.8"}
+    return {"message": "fastapi-swe-v0.3.9"}
+
 
 app.include_router(user_routes.router)
 
 # Manejo global de errores 500
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception): # pragma: no cover
     logger.exception(f"Unhandled error: {exc}")
     return JSONResponse(
         status_code=500,
