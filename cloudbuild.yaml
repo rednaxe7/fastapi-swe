@@ -26,5 +26,10 @@ steps:
       - 'us-central1'
       - '--allow-unauthenticated'
 
+
+# Definimos el bucket para almacenar los logs y la cuenta de servicio
+serviceAccount: 'projects/$PROJECT_ID/serviceAccounts/cloudbuild-deploy@latam-desafio.iam.gserviceaccount.com'
+logsBucket: 'gs://fastapi-swe-cloudbuild'
+
 images:
   - 'gcr.io/$PROJECT_ID/fastapi-swe'
