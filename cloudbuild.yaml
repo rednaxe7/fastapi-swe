@@ -1,21 +1,25 @@
 steps:
   # Paso 1: Construir la imagen Docker
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/mi-app', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/fastapi-swe', '.']
 
-  # Paso 2: Subir la imagen al Container Registry
+  # Paso 2: Ejecutar pruebas
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/mi-app']
+    args: ['run', '--rm', 'gcr.io/$PROJECT_ID/fastapi-swe', 'pytest', 'tests']
+  
+  # Paso 3: Subir la imagen al Container Registry (si las pruebas pasan)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/fastapi-swe']
 
-  # Paso 3: Desplegar la imagen en Google Cloud Run
+  # Paso 4: Desplegar la imagen en Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     args:
       - 'gcloud'
       - 'run'
       - 'deploy'
-      - 'mi-app'
+      - 'fastapi-swe'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/mi-app'
+      - 'gcr.io/$PROJECT_ID/fastapi-swe'
       - '--platform'
       - 'managed'
       - '--region'
@@ -23,4 +27,4 @@ steps:
       - '--allow-unauthenticated'
 
 images:
-  - 'gcr.io/$PROJECT_ID/mi-app'
+  - 'gcr.io/$PROJECT_ID/fastapi-swe'
