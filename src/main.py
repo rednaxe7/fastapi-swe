@@ -28,7 +28,7 @@ app.add_middleware(LogRequestsMiddleware)
 @app.get("/")
 def read_root():
     logger.info("Root endpoint hit")
-    return {"message": "fastapi-swe-v0.3.9"}
+    return {"message": "fastapi-swe-v1.0.0"}
 
 
 app.include_router(user_routes.router)

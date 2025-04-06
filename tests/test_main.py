@@ -12,7 +12,7 @@ def client():
 def test_read_root(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "fastapi-swe-v0.3.9"}
+    assert response.json() == {"message": "fastapi-swe-v1.0.0"}
 
 # Test para verificar que los logs del middleware estén funcionando correctamente
 # Aunque no podemos verificar directamente los logs, podemos simular una solicitud y asegurarnos
