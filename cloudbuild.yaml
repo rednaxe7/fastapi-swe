@@ -1,15 +1,15 @@
 steps:
   # Paso 1: Construir la imagen Docker
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/fastapi-swe', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/gcr-repo/fastapi-swe', '.']
 
   # Paso 2: Ejecutar pruebas
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['run', '--rm', 'gcr.io/$PROJECT_ID/fastapi-swe', 'pytest', 'tests']
+    args: ['run', '--rm', 'us-central1-docker.pkg.dev/$PROJECT_ID/gcr-repo/fastapi-swe', 'pytest', 'tests']
   
   # Paso 3: Subir la imagen al Container Registry (si las pruebas pasan)
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/fastapi-swe']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/gcr-repo/fastapi-swe']
 
   # Paso 4: Desplegar la imagen en Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -19,7 +19,7 @@ steps:
       - 'deploy'
       - 'fastapi-swe'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/fastapi-swe'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/gcr-repo/fastapi-swe'
       - '--platform'
       - 'managed'
       - '--region'
@@ -32,4 +32,4 @@ serviceAccount: 'projects/$PROJECT_ID/serviceAccounts/cloudbuild-deploy@latam-de
 logsBucket: 'gs://fastapi-swe-cloudbuild'
 
 images:
-  - 'gcr.io/$PROJECT_ID/fastapi-swe'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/gcr-repo/fastapi-swe'
