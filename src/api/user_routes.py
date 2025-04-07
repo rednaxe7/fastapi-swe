@@ -88,4 +88,37 @@ def get_users(db: Session = Depends(get_db)):
         logger.info(f"{len(users)} users found")
         return users
 
+@router.get("/{page}/{page_size}/{filtro_buscar}/{order_by}/{descending}", response_model=dict)
+def get_users(
+    page: int = 1,
+    page_size: int = 10,
+    filtro_buscar: str = "",
+    order_by: int = 1,
+    descending: int = 0,
+    db: Session = Depends(get_db)
+):
+    logger.info(f"Fetching users: page={page}, page_size={page_size}, filtro_buscar={filtro_buscar}, order_by={order_by}, descending={descending}")
+    
+    # Convierte el valor de `descending` (1 para True, 0 para False)
+    descending = bool(descending)
+
+    try:
+
+        # Llamamos al servicio de obtener usuarios con paginación
+        result = user_service.get_users_service_pag(
+            db, page, page_size, order_by, descending, filtro_buscar
+        )
+
+        if not result:
+            logger.warning("No users found")
+            raise HTTPException(status_code=404, detail="No users found")
+        
+        result["users"] = [UserResponse.from_orm(user) for user in result["users"]]
+
+        logger.info(f"{len(result['users'])} users found")
+        return result
+    
+    except Exception as e:
+        logger.error(f"Unhandled error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 

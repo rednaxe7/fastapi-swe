@@ -1,7 +1,17 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import asc, desc
 from src.db.models import User
 from src.schemas.user import UserCreate, UserUpdate
 from datetime import datetime
+from typing import List, Dict
+
+COLUMN_INDEXES = {
+    1: User.id, 
+    2: User.username,
+    3: User.email, 
+    4: User.created_at, 
+    # Agrega más columnas si es necesario
+}
 
 # Crear Usuario
 def create_user(db: Session, user_data: UserCreate) -> User:
@@ -39,3 +49,50 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 # Obtener todos los usuarios
 def get_users(db: Session) -> list[User]:
     return db.query(User).all()
+
+
+
+# Obtener usuarios con paginación, ordenamiento y totales
+def get_users_paginated(
+    db: Session,
+    page: int = 1,
+    page_size: int = 10,
+    order_by_index: int = 1,  # Usamos un índice
+    descending: bool = False,
+    filtro_buscar: str = None
+) -> Dict:
+    skip = (page - 1) * page_size
+
+    # Filtrado
+    query = db.query(User)
+    if filtro_buscar and filtro_buscar.strip():
+        # Filtrar por username o email
+        query = query.filter(
+            (User.username.ilike(f"%{filtro_buscar}%")) | 
+            (User.email.ilike(f"%{filtro_buscar}%"))
+        )
+
+    # Ordenamiento  
+    # Obtener la columna basada en el índice
+    if order_by_index not in COLUMN_INDEXES:
+        raise ValueError("Invalid column index.")
+    
+    order_column = COLUMN_INDEXES[order_by_index]
+    order_clause = desc(order_column) if descending else asc(order_column)
+    
+    # Obtener los usuarios
+    users = query.order_by(order_clause).offset(skip).limit(page_size).all()
+
+    # Obtener el total de registros
+    total_count = query.count()
+
+    # Calcular el número total de páginas
+    total_pages = (total_count + page_size - 1) // page_size  # Redondeo hacia arriba
+
+    return {
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": page,
+        "page_size": page_size,
+        "users": users
+    }

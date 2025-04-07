@@ -17,4 +17,14 @@ def get_user_service(db: Session, user_id: int):
 def get_users_service(db: Session):
     return user_repository.get_users(db)
 
-
+def get_users_service_pag(
+    db: Session, 
+    page: int = 1, 
+    page_size: int = 10, 
+    order_by: int = 1, 
+    descending: bool = False, 
+    filtro_buscar: str = None
+):
+    return user_repository.get_users_paginated(
+        db, page, page_size, order_by, descending, filtro_buscar
+    )
